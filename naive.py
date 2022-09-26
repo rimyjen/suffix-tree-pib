@@ -15,12 +15,10 @@ class SuffixTree:
     def __repr__(self):
         return f'SuffixTree("{self.string}")'
 
-    def find_edge():
-        '''
-        Scans through the children dictionary of a node 
-        Tests each edge for whether it matches the character we are looking for
-        Returns the node if it finds a match. Otherwise returns None'''
-        pass
+    def find_edge(self, children, key):
+        '''Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None'''
+        child = children.get(key)
+        return child
 
     def search_edge():
         '''Should look through edge until end or mismatch'''
