@@ -24,10 +24,14 @@ class SuffixTree:
         return child
 
     def search_edge(self, v: SuffixTreeNode, j: int) -> int:
-        '''Takes a node and a suffix index. Returns index of mismatch or edge end.'''
+        '''Takes a node and a suffix index. Returns number of comparisons made before mismatch or edge end'''
         return search_range(self.string, v.r, self.string, j)
 
     def search_path(self, v: SuffixTreeNode, j: int) -> tuple[SuffixTreeNode, int]:
+        '''
+        Takes a node and an index. Recursively searches suffix tree. 
+        Returns position of mismatch given by a node and the number of steps taken towards that node.
+        '''
         out = self.find_edge(v.children, self.string[j])
         if out is None:
             return v, 0 # Or v.range[1]-v.range[0]
@@ -37,12 +41,20 @@ class SuffixTree:
             return out, length
         return self.search_path(out, j + length)
 
-    def split_edge():
-        '''
-        Splits edge at mismatch position
-        Creates internal node by updating children
-        Returns the new internal node'''
-        pass
+    def split_edge(self, v: SuffixTreeNode, j: int):
+        '''Takes position of mismatch given as a node and an index. Returns new internal node at given position'''
+        p = v.parent
+        i,n = v.r
+        
+        u = SuffixTreeNode((i, j), parent = p)
+        u.children[self.string[j]] = v
+
+        p.children[self.string[i]] = u
+
+        v.r = (j, n)
+        v.parent = u
+
+        return u
 
     def insert_child():
         '''Creates a new leaf node and inserts it as a child of a parent node'''

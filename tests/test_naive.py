@@ -29,7 +29,7 @@ def test_search_path(string):
     x = string
     tree = SuffixTree(x)
     v = SuffixTreeNode((0,3), parent = tree.root)
-    leaf = SuffixTreeNode((3,6), parent = v, label=0)
+    leaf = SuffixTreeNode((3,6), parent = v, label = 0)
     v.children[x[3]] = leaf
     tree.root.children[x[0]] = v
 
@@ -40,3 +40,16 @@ def test_search_path(string):
     assert tree.search_path(tree.root, 4) == (v, 2)
     assert tree.search_path(tree.root, 5) == (tree.root, 0)
     
+def test_split_edge(string):
+    x = string
+    tree = SuffixTree(x)
+    v = SuffixTreeNode((0,6), parent = tree.root, label = 0)
+    tree.root.children[x[0]] = v
+    u = tree.split_edge(v, 3)
+
+    assert u.r == (0,3)
+    assert u.parent == tree.root
+    assert u.children == {x[3]: v}
+    assert tree.root.children == {x[0]: u}
+    assert v.r == (3,6)
+    assert v.parent == u
