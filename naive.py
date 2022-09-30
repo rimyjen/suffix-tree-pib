@@ -1,17 +1,18 @@
 from helper_functions import *
 
 class SuffixTreeNode:
-    def __init__(self, r: tuple[int,int], label = None):
+    def __init__(self, r: tuple[int,int], parent, label = None):
         self.r = r
         self.label = label
         self.children:dict[str, SuffixTreeNode] = {}
+        self.parent:SuffixTreeNode|None = parent
 
     def __repr__(self):
-        return f'SuffixTreeNode({self.r}, {self.label})'
+        return f'SuffixTreeNode({self.r}, {self.label}, {self.parent})'
         
 class SuffixTree:
     def __init__(self, string: str):
-        self.root = SuffixTreeNode((0,0))
+        self.root = SuffixTreeNode((0,0), parent = None)
         self.string = string
 
     def __repr__(self):
