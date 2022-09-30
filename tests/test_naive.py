@@ -6,17 +6,37 @@ import pytest
 from naive import *
 
 @pytest.fixture
-def Tree():
-    return SuffixTree("abaaba")
+def string():
+    yield "ababab"
 
-def test_always_passes():
-    assert True
+@pytest.fixture
+def tree(string):
+    yield SuffixTree(string)
 
-def test_always_fails():
-    assert False
+@pytest.mark.parametrize(
+    'key, expected_value',
+    [('a', 'child1'), ('b', None)])
 
-def test_find_edge(Tree): 
-    assert Tree.find_edge({"a": "child1"}, "a") == "child1"
+def test_find_edge(key, expected_value, tree): 
+    assert tree.find_edge({'a': 'child1'}, key) == expected_value
 
-def test_no_edge(Tree):
-    assert Tree.find_edge({}, "x") == None
+def test_search_edge(tree):
+    assert tree.search_edge(tree.root, 3) == 0
+    assert tree.search_edge(SuffixTreeNode((1,3), parent = tree.root), 3) == 2
+    assert tree.search_edge(SuffixTreeNode((0,5), parent = tree.root), 4) == 2
+
+def test_search_path(string):
+    x = string
+    tree = SuffixTree(x)
+    v = SuffixTreeNode((0,3), parent = tree.root)
+    leaf = SuffixTreeNode((3,6), parent = v, label=0)
+    v.children[x[3]] = leaf
+    tree.root.children[x[0]] = v
+
+    assert tree.search_path(tree.root, 0) == (leaf, 3)
+    assert tree.search_path(tree.root, 1) == (tree.root, 0)
+    assert tree.search_path(tree.root, 2) == (leaf, 1)
+    assert tree.search_path(tree.root, 3) == (tree.root, 0)
+    assert tree.search_path(tree.root, 4) == (v, 2)
+    assert tree.search_path(tree.root, 5) == (tree.root, 0)
+    
