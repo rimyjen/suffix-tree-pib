@@ -1,40 +1,40 @@
+from helper_functions import *
+
 class SuffixTreeNode:
-    def __init__(self, range, label = None):
-        self.range = range
+    def __init__(self, r: tuple[int,int], label = None):
+        self.r = r
         self.label = label
-        self.children = {}
+        self.children:dict[str, SuffixTreeNode] = {}
 
     def __repr__(self):
-        return f'SuffixTreeNode({self.range}, "{self.label}")'
+        return f'SuffixTreeNode({self.r}, {self.label})'
         
 class SuffixTree:
-    def __init__(self, string):
+    def __init__(self, string: str):
         self.root = SuffixTreeNode((0,0))
         self.string = string
 
     def __repr__(self):
-        return f'SuffixTree("{self.string}")'
+        return f'SuffixTree({self.string})'
 
-    def find_edge(self, children, key):
+    def find_edge(self, children: dict, key: str) -> SuffixTreeNode:
         '''Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None'''
         child = children.get(key)
         return child
 
-    def search_edge(self, range, j):
-        '''
-        Takes a range of an edge and a suffix index. 
-        If mismatch is found, returns index of mismatch. 
-        If end of range is reached, returns new suffix index.
-        '''
-        i = range[0] #from
-        m = range[1] #to
-        while j <= m:
-            if self.string[i] == self.string[j]:
-                i += 1
-                j += 1
-            else:
-                return i
-        return j
+    def search_edge(self, v: SuffixTreeNode, j: int) -> int:
+        '''Takes a node and a suffix index. Returns index of mismatch or edge end.'''
+        return search_range(self.string, v.r, self.string, j)
+
+    def search_path(self, v: SuffixTreeNode, j: int) -> tuple[SuffixTreeNode, int]:
+        out = self.find_edge(v.children, self.string[j])
+        if out is None:
+            return v, 0 # Or v.range[1]-v.range[0]
+        length = self.search_edge(out, j)
+        # Something bad can happen here without sentinel.
+        if j + length == len(self.string): # j + length is end of string we search for
+            return out, length
+        return self.search_path(out, j + length)
 
     def split_edge():
         '''
