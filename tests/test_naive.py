@@ -54,3 +54,17 @@ def test_split_edge(string):
     assert tree.root.children == {x[0]: u}
     assert v.r == (3,6)
     assert v.parent == u
+
+def test_insert_child(string):
+    x = string
+    tree = SuffixTree(x)
+    u = SuffixTreeNode((0,3), parent = tree.root)
+    v = SuffixTreeNode((3,6), parent = u, label = 0)
+    u.children[x[3]] = v
+    tree.root.children[x[0]] = u
+
+    leaf = tree.insert_child(u, 2)
+    assert leaf.r == (5,6)
+    assert leaf.parent == u
+    assert leaf.label == 2
+    assert u.children[x[leaf.r[0]]] == leaf

@@ -3,7 +3,7 @@ from helper_functions import *
 class SuffixTreeNode:
     def __init__(self, r: tuple[int,int], parent, label = None):
         self.r = r
-        self.label = label
+        self.label:int|None = label
         self.children:dict[str, SuffixTreeNode] = {}
         self.parent:SuffixTreeNode|None = parent
 
@@ -57,9 +57,12 @@ class SuffixTree:
 
         return u
 
-    def insert_child():
-        '''Creates a new leaf node and inserts it as a child of a parent node'''
-        pass
+    def insert_child(self, u: SuffixTreeNode, j: int, ) -> SuffixTreeNode:
+        '''Takes an internal node and a suffix index. Inserts leaf node as child of internal node. Returns leaf node'''
+        x = j+u.r[1] 
+        leaf = SuffixTreeNode((x, len(self.string)), parent = u, label = j)
+        u.children[self.string[x]] = leaf
+        return leaf
 
     def naive_insert():
         '''Takes root and string. Returns suffix tree'''
