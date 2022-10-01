@@ -7,7 +7,7 @@ from naive import *
 
 @pytest.fixture
 def string():
-    yield "ababab"
+    yield "ababa$"
 
 @pytest.fixture
 def tree(string):
@@ -23,7 +23,7 @@ def test_find_edge(key, expected_value, tree):
 def test_search_edge(tree):
     assert tree.search_edge(tree.root, 3) == 0
     assert tree.search_edge(SuffixTreeNode((1,3), parent = tree.root), 3) == 2
-    assert tree.search_edge(SuffixTreeNode((0,5), parent = tree.root), 4) == 2
+    assert tree.search_edge(SuffixTreeNode((0,6), parent = tree.root), 4) == 1
 
 def test_search_path(string):
     x = string
@@ -33,12 +33,13 @@ def test_search_path(string):
     v.children[x[3]] = leaf
     tree.root.children[x[0]] = v
 
-    assert tree.search_path(tree.root, 0) == (leaf, 3)
-    assert tree.search_path(tree.root, 1) == (tree.root, 0)
-    assert tree.search_path(tree.root, 2) == (leaf, 1)
-    assert tree.search_path(tree.root, 3) == (tree.root, 0)
-    assert tree.search_path(tree.root, 4) == (v, 2)
-    assert tree.search_path(tree.root, 5) == (tree.root, 0)
+    with pytest.raises(Exception) as excinfo: #no mismatches in suffix 
+        tree.search_path(tree.root, 0)
+    assert "Reached end" in str(excinfo.value)
+
+    assert tree.search_path(tree.root, 1) == (tree.root, 0) #no matching children in root
+    assert tree.search_path(tree.root, 2) == (v, 0) #no matching children after reaching internal node
+    assert tree.search_path(tree.root, 4) == (v, 1) #mismatch
     
 def test_split_edge(string):
     x = string

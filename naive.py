@@ -20,8 +20,8 @@ class SuffixTree:
 
     def find_edge(self, children: dict, key: str) -> SuffixTreeNode:
         '''Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None'''
-        child = children.get(key)
-        return child
+        v = children.get(key)
+        return v
 
     def search_edge(self, v: SuffixTreeNode, j: int) -> int:
         '''Takes a node and a suffix index. Returns number of comparisons made before mismatch or edge end'''
@@ -34,14 +34,15 @@ class SuffixTree:
         '''
         out = self.find_edge(v.children, self.string[j])
         if out is None:
-            return v, 0 # Or v.range[1]-v.range[0]
+            return v, 0
         length = self.search_edge(out, j)
-        # Something bad can happen here without sentinel.
-        if j + length == len(self.string): # j + length is end of string we search for
+        if j + length == len(self.string): # j + length is end of string we search for. In case of no sentinel.
+            raise Exception("Reached end of suffix string with no mismatches")
+        if length < out.r[1]-out.r[0]:
             return out, length
         return self.search_path(out, j + length)
 
-    def split_edge(self, v: SuffixTreeNode, j: int):
+    def split_edge(self, v: SuffixTreeNode, j: int) -> SuffixTreeNode:
         '''Takes position of mismatch given as a node and an index. Returns new internal node at given position'''
         p = v.parent
         i,n = v.r
