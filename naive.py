@@ -42,17 +42,20 @@ class SuffixTree:
             return out, length
         return self.search_path(out, j + length)
 
-    def split_edge(self, v: SuffixTreeNode, j: int) -> SuffixTreeNode:
-        '''Takes position of mismatch given as a node and an index. Returns new internal node at given position'''
+    def split_edge(self, v: SuffixTreeNode, k: int) -> SuffixTreeNode:
+        '''
+        Takes position of mismatch given as a node and and the number of steps taken towards that node. 
+        Returns new internal node at given position.
+        '''
         p = v.parent
         i,n = v.r
         
-        u = SuffixTreeNode((i, j), parent = p)
-        u.children[self.string[j]] = v
+        u = SuffixTreeNode((i, i+k), parent = p)
+        u.children[self.string[i+k]] = v
 
         p.children[self.string[i]] = u
 
-        v.r = (j, n)
+        v.r = (i+k, n)
         v.parent = u
 
         return u
