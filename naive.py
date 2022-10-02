@@ -13,7 +13,7 @@ class SuffixTreeNode:
 class SuffixTree:
     def __init__(self, string: str):
         self.root = SuffixTreeNode((0,0), parent = None)
-        self.string = string
+        self.string = string + "$"
 
     def __repr__(self):
         return f'SuffixTree({self.string})'
@@ -60,13 +60,23 @@ class SuffixTree:
 
         return u
 
-    def insert_child(self, u: SuffixTreeNode, j: int, ) -> SuffixTreeNode:
+    def insert_child(self, u: SuffixTreeNode, j: int) -> SuffixTreeNode:
         '''Takes an internal node and a suffix index. Inserts leaf node as child of internal node. Returns leaf node'''
-        x = j+u.r[1] 
+        x = j+u.r[1]-u.r[0]
         leaf = SuffixTreeNode((x, len(self.string)), parent = u, label = j)
         u.children[self.string[x]] = leaf
         return leaf
 
-    def naive_insert():
-        '''Takes root and string. Returns suffix tree'''
-        pass
+    def naive_insert(self):
+        '''Iteratively inserts suffixes in suffix tree'''
+        for j in range(len(self.string)):
+            v, k = self.search_path(self.root, j)
+            if k > 0:
+                u = self.split_edge(v, k)
+            else:
+                u = v
+            self.insert_child(u, j)
+
+test = SuffixTree("abbaa")
+test.naive_insert()
+print(test)
