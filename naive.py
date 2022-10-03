@@ -9,7 +9,13 @@ class SuffixTreeNode:
         self.parent: SuffixTreeNode | None = parent
 
     def __repr__(self):
-        return f"SuffixTreeNode({self.r}, {self.label}, {self.parent})"
+        return f"SuffixTreeNode({self.r}, {self.parent}, {self.label})"
+
+    def add_child(self, key: str, value):
+        self.children[key] = value
+
+    def get_range_length(self) -> int:
+        return self.r[1] - self.r[0]
 
 
 class SuffixTree:
@@ -42,7 +48,7 @@ class SuffixTree:
             self.string
         ):  # j + length is end of string we search for. In case of no sentinel.
             raise Exception("Reached end of suffix string with no mismatches")
-        if length < range_length(out.r[0], out.r[1]):
+        if length < out.get_range_length():
             return out, length
         return self.search_path(out, j + length)
 
@@ -55,8 +61,8 @@ class SuffixTree:
         i, n = v.r
 
         u = SuffixTreeNode((i, i + k), parent=p)
-        add_to_dictionary(u.children, self.string[i + k], v)
-        add_to_dictionary(p.children, self.string[i], u)
+        u.add_child(self.string[i + k], v)
+        p.add_child(self.string[i], u)
 
         v.r = (i + k, n)
         v.parent = u
@@ -65,9 +71,9 @@ class SuffixTree:
 
     def insert_child(self, u: SuffixTreeNode, j: int) -> SuffixTreeNode:
         """Takes an internal node and a suffix index. Inserts leaf node as child of internal node. Returns leaf node"""
-        x = j + range_length(u.r[0], u.r[1])
+        x = j + u.get_range_length()
         leaf = SuffixTreeNode((x, len(self.string)), parent=u, label=j)
-        add_to_dictionary(u.children, self.string[x], leaf)
+        u.add_child(self.string[x], leaf)
         return leaf
 
     def naive_insert(self):
@@ -82,5 +88,5 @@ class SuffixTree:
 
 
 test = SuffixTree("abbaa")
-test.naive_insert()
+test.naive_insert() #could instead add naive_insert to SuffixTree __init__, but this breaks current test setup
 print(test)

@@ -9,11 +9,3 @@ def search_range(x: str, r: tuple[int, int], y: str, j: int) -> int:
         if x[i + k] != y[j + k]:
             return k
     return length
-
-
-def range_length(i: int, n: int) -> int:
-    return n - i
-
-
-def add_to_dictionary(dict, key, value):
-    dict[key] = value
