@@ -1,3 +1,4 @@
+import graphviz
 from helper_functions import *
 
 
@@ -16,6 +17,21 @@ class SuffixTreeNode:
 
     def get_range_length(self) -> int:
         return self.r[1] - self.r[0]
+
+    def to_dot(self):
+        if self.parent is None:
+            yield f'{id(self)}[label = "", shape = circle, style = filled, fillcolor = grey]'
+        else:
+            if self.label is None:
+                yield f'{id(self)}[label = "", shape = circle, style = filled, fillcolor = grey]'
+            else:
+                yield f"{id(self)}[label = {self.label}, shape = circle, style = filled, fillcolor = grey]"
+            label = f'({",".join(map(str, self.r))})'
+            yield f'{id(self.parent)} -> {id(self)}[label = "{label}"]'
+
+        for key in self.children:
+            child = self.children[key]
+            yield from child.to_dot()
 
 
 class SuffixTree:
@@ -86,7 +102,17 @@ class SuffixTree:
                 u = v
             self.insert_child(u, j)
 
+    def to_dot(self):
+        return 'digraph { rankdir="LR" ' + "\n".join(self.root.to_dot()) + "}"
 
-test = SuffixTree("abbaa")
-test.naive_insert() #could instead add naive_insert to SuffixTree __init__, but this breaks current test setup
-print(test)
+    def to_graphviz(self):
+        graph = self.to_dot()
+        return graphviz.Source(graph)
+
+
+# OUTPUT #
+test = SuffixTree("MISSISSIPPI")
+test.naive_insert()  # could instead add naive_insert to SuffixTree __init__, but this breaks current test setup
+
+graph = test.to_graphviz()
+graph.render("graphviz/suffixtest", view=False)
