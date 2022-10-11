@@ -15,11 +15,15 @@ class SuffixTreeNode:
             f"SuffixTreeNode({self.r}, {self.parent}, {self.suffix_link}, {self.label})"
         )
 
+    def find_child(self, key: str):
+        """Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None"""
+        return self.children.get(key)
+
     def add_child(self, key: str, value):
         self.children[key] = value
 
-    def get_range_length(self) -> int:
-        return self.r[1] - self.r[0]
+    def get_edge_length(self) -> int:
+        return get_range_length(self.r[0], self.r[1])
 
     def to_dot(self):
         if self.parent is None:
@@ -47,11 +51,6 @@ class SuffixTree:
     def __repr__(self):
         return f"SuffixTree({self.string})"
 
-    def find_edge(self, children: dict, key: str) -> SuffixTreeNode:
-        """Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None"""
-        v = children.get(key)
-        return v
-
     def search_edge(self, v: SuffixTreeNode, j: int) -> int:
         """Takes a node and a suffix index. Returns number of comparisons made before mismatch or edge end"""
         return search_range(self.string, v.r, self.string, j)
@@ -75,7 +74,7 @@ class SuffixTree:
 
     def insert_child(self, u: SuffixTreeNode, j: int) -> SuffixTreeNode:
         """Takes an internal node and a suffix index. Inserts leaf node as child of internal node. Returns leaf node"""
-        x = j + u.get_range_length()
+        x = j + u.get_edge_length()
         leaf = SuffixTreeNode((x, len(self.string)), parent=u, label=j)
         u.add_child(self.string[x], leaf)
         return leaf
@@ -89,17 +88,32 @@ class SuffixTree:
         """
         pass
 
-    def fast_scan(self):
+    def fast_scan(self, w: SuffixTreeNode, x: int, y: int) -> SuffixTreeNode:
         """
-        Takes a node w and a range 'from', 'to'. I.e. compares two strings, and jumps from node to node.
+        Takes a node w and a range x, y. I.e. compares two strings, and jumps from node to node.
+        Invariants:
+            len(w.r), len(x,y) > 0
+            self.string[w.r[0]] == self.string[x]
         3 cases:
             1. The two strings match. Return node
-            2. 'from' + len(w.r) > 'to'. Create new node at w[0] + 'to'-'from'. Return new node.
-            3. 'from' + len(w.r) < 'to'. Recurse until case 1 or 2.
-                1. Find new edge to search from with find_edge. Update from = from + len(w.r). Update w.
-                2. fast_scan(new_w, new_from, to)
+            2. len(w.r) > len(x,y). Create new node at w.r[0] + len(x,y). Return new node.
+            3. len(w.r) < len(x,y). Recurse until case 1 or 2.
+                1. Find new edge to search from with find_child. Update x = x + len(w.r). Update w.
+                2. fast_scan(new_w, new_x, y)
         """
-        pass
+        length_w = w.get_edge_length()
+        length_xy = get_range_length(x, y)
+        # assert invariants
+        if length_w > length_xy:
+            out = self.split_edge(w, length_xy)
+            return out
+        elif length_w < length_xy:
+            # this part doesn't work, attribute error, 'Nonetype'
+            x += length_w
+            out = w.find_child(self.string[x])
+            self.fast_scan(out, x, y)
+        else:
+            return w
 
     def suffix_search(self, v):
         """
