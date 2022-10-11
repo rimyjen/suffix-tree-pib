@@ -12,11 +12,15 @@ class SuffixTreeNode:
     def __repr__(self):
         return f"SuffixTreeNode({self.r}, {self.parent}, {self.label})"
 
+    def find_child(self, key: str):
+        """Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None"""
+        return self.children.get(key)
+
     def add_child(self, key: str, value):
         self.children[key] = value
 
-    def get_range_length(self) -> int:
-        return self.r[1] - self.r[0]
+    def get_edge_length(self) -> int:
+        return get_range_length(self.r[0], self.r[1])
 
     def to_dot(self):
         if self.parent is None:
@@ -42,11 +46,6 @@ class SuffixTree:
     def __repr__(self):
         return f"SuffixTree({self.string})"
 
-    def find_edge(self, children: dict, key: str) -> SuffixTreeNode:
-        """Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None"""
-        v = children.get(key)
-        return v
-
     def search_edge(self, v: SuffixTreeNode, j: int) -> int:
         """Takes a node and a suffix index. Returns number of comparisons made before mismatch or edge end"""
         return search_range(self.string, v.r, self.string, j)
@@ -56,7 +55,7 @@ class SuffixTree:
         Takes a node and an index. Recursively searches suffix tree.
         Returns position of mismatch given by a node and the number of steps taken towards that node.
         """
-        out = self.find_edge(v.children, self.string[j])
+        out = v.find_child(self.string[j])
         if out is None:
             return v, 0
         length = self.search_edge(out, j)
@@ -64,7 +63,7 @@ class SuffixTree:
             self.string
         ):  # j + length is end of string we search for. In case of no sentinel.
             raise Exception("Reached end of suffix string with no mismatches")
-        if length < out.get_range_length():
+        if length < out.get_edge_length():
             return out, length
         return self.search_path(out, j + length)
 
@@ -87,7 +86,7 @@ class SuffixTree:
 
     def insert_child(self, u: SuffixTreeNode, j: int) -> SuffixTreeNode:
         """Takes an internal node and a suffix index. Inserts leaf node as child of internal node. Returns leaf node"""
-        x = j + u.get_range_length()
+        x = j + u.get_edge_length()
         leaf = SuffixTreeNode((x, len(self.string)), parent=u, label=j)
         u.add_child(self.string[x], leaf)
         return leaf

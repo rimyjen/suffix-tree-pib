@@ -9,3 +9,7 @@ def search_range(x: str, r: tuple[int, int], y: str, j: int) -> int:
         if x[i + k] != y[j + k]:
             return k
     return length
+
+
+def get_range_length(i: str, j: str):
+    return j - i

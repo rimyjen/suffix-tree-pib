@@ -16,8 +16,11 @@ def tree():
 
 
 @pytest.mark.parametrize("key, expected_value", [("a", "child1"), ("b", None)])
-def test_find_edge(key, expected_value, tree):
-    assert tree.find_edge({"a": "child1"}, key) == expected_value
+def test_find_child(key, expected_value):
+    v = SuffixTreeNode((0, 0), parent=None)
+    v.add_child("a", "child1")
+
+    assert v.find_child(key) == expected_value
 
 
 def test_search_edge(tree):
