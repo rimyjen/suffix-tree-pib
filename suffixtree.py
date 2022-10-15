@@ -2,7 +2,7 @@ import graphviz
 
 
 class SuffixTreeNode:
-    def __init__(self, r, parent, label=None):
+    def __init__(self, r, parent=None, label=None):
         self.r: tuple[int, int] = r
         self.label: int | None = label
         self.children: dict[str, SuffixTreeNode] = {}
@@ -10,6 +10,18 @@ class SuffixTreeNode:
 
     def __repr__(self):
         return f"SuffixTreeNode({self.r}, label = {self.label})"
+
+    def __iter__(self):
+        for key in self.children:
+            child = self.children[key]
+            n_children = len(child.children)
+
+            if child.label == None:
+                assert n_children > 1, f"internal node expected to have more than 1 child, has {n_children}"
+                yield from child
+            else:
+                assert n_children == 0, f"leaf node expected to have 0 children, has {n_children}"
+                yield child
 
     def find_child(self, key: str):
         """Takes a dictionary and a key. Returns value if key is in dictionary. Otherwise returns None"""
@@ -53,12 +65,18 @@ class SuffixTree:
         return graphviz.Source(graph)
 
 
-def search_edge(x: str, v: SuffixTreeNode, j: int) -> int:
-    """Takes a string, a node and a suffix index. Returns number of comparisons made between node edge and suffix before mismatch or edge end"""
+def search_edge(x: str, v: SuffixTreeNode, y: str, j: int) -> int:
+    """
+    Takes a string x and a SuffixTreeNode v containing a range to search in the string.
+    Takes another string y and an index j specifying where in the string to search from.
+    Returns number of comparisons made between the two strings before mismatch or end of string x.
+    Requires string y to end with a sentinel.
+    Without sentinel function fails to distinguish if end of string x or y was reached.
+    """
     i, m = v.r
-    length = min(m - i, len(x) - j)
+    length = min(m - i, len(y) - j)
     for k in range(length):
-        if x[i + k] != x[j + k]:
+        if x[i + k] != y[j + k]:
             return k
     return length
 
@@ -71,10 +89,12 @@ def search_path(x: str, v: SuffixTreeNode, j: int) -> tuple[SuffixTreeNode, int]
     out = v.find_child(x[j])
     if out is None:
         return v, 0
-    length = search_edge(x, out, j)
+    length = search_edge(x, out, x, j)
     if j + length == len(x):
         # j + length is end of string we search for. In case of no sentinel.
-        raise Exception("Reached end of suffix string with no mismatches")
+        raise Exception(
+            "Reached end of suffix with no mismatches. Make sure string contains sentinel."
+        )
     if length < out.get_edge_length():
         return out, length
     return search_path(x, out, j + length)
@@ -109,7 +129,7 @@ def insert_child(x: str, u: SuffixTreeNode, j: int) -> SuffixTreeNode:
 def naive_st_construction(x: str) -> SuffixTree:
     """Iteratively inserts suffixes in suffix tree"""
     x = x + "$"
-    root = SuffixTreeNode((0, 0), parent=None)
+    root = SuffixTreeNode((0, 0))
 
     for j in range(len(x)):
         v, k = search_path(x, root, j)
