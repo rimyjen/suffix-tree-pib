@@ -222,8 +222,12 @@ def mccreights_st_construction(x: str) -> SuffixTree:
     v = leaf.parent
 
     for i in range(1, len(x)):
-        w = suffix_search(x, v, root)
-        v.suffix_link = w
+        if v.suffix_link == None:
+            w = suffix_search(x, v, root)
+            v.suffix_link = w
+
+        else:
+            w = v.suffix_link
 
         if w == root:
             h, k = search_path(x, w, i)
