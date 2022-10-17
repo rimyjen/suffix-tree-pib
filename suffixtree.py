@@ -2,11 +2,12 @@ import graphviz
 
 
 class SuffixTreeNode:
-    def __init__(self, r, parent=None, label=None):
+    def __init__(self, r, parent=None, suffix_link=None, label=None):
         self.r: tuple[int, int] = r
         self.label: int | None = label
         self.children: dict[str, SuffixTreeNode] = {}
         self.parent: SuffixTreeNode | None = parent
+        self.suffix_link: SuffixTreeNode | None = suffix_link
 
     def __repr__(self):
         return f"SuffixTreeNode({self.r}, label = {self.label})"
@@ -17,10 +18,14 @@ class SuffixTreeNode:
             n_children = len(child.children)
 
             if child.label == None:
-                assert n_children > 1, f"internal node expected to have more than 1 child, has {n_children}"
+                assert (
+                    n_children > 1
+                ), f"internal node expected to have more than 1 child, has {n_children}"
                 yield from child
             else:
-                assert n_children == 0, f"leaf node expected to have 0 children, has {n_children}"
+                assert (
+                    n_children == 0
+                ), f"leaf node expected to have 0 children, has {n_children}"
                 yield child
 
     def find_child(self, key: str):
@@ -53,6 +58,7 @@ class SuffixTree:
     def __init__(self, root: SuffixTreeNode, string: str):
         self.root = root
         self.string = string
+        self.root.suffix_link = self.root
 
     def __repr__(self):
         return f"SuffixTree({self.string})"
@@ -142,7 +148,100 @@ def naive_st_construction(x: str) -> SuffixTree:
     return SuffixTree(root, x)
 
 
-tree = naive_st_construction("ABABB")
+def fast_scan(x: str, w: SuffixTreeNode, i: int, j: int) -> SuffixTreeNode:
+    """
+    Takes a node w and a range from i to j. I.e. compares two strings, and jumps from node to node.
+    Invariants:
+        j-i > 0
+    3 cases:
+        1. The two strings match. Return node
+        2. len(w.r) > j-i. Create new node at w.r[0] + j-i. Return new node.
+        3. len(w.r) < j-i. Recurse until case 1 or 2.
+            1. Find new edge to search from with find_child. Update i = i + len(w.r). Update w.
+            2. fast_scan(new_w, new_i, y)
+    """
+
+    length_w = w.get_edge_length()
+    length_ij = j - i
+
+    assert length_ij > 0
+
+    if length_w > length_ij:
+        return split_edge(x, w, length_ij)
+        # return "length_w > length_ij"
+    elif length_w < length_ij:
+        i += length_w
+        out = w.find_child(x[i])
+        return fast_scan(x, out, i, j)
+    else:
+        return w
+
+
+def suffix_search(x: str, v: SuffixTreeNode, root: SuffixTreeNode) -> SuffixTreeNode:
+    """
+    Takes parent v of last leaf i-1. Returns node from where to start naive_scan.
+    4 cases:
+        1. v is root. Return root
+        2. v is child of root & v.get_edge_length() == 1. Return root
+        3. v is child of root & v.get_edge_length() > 1. Fast_scan(root, (v.r[0]+1, v.r[1]))   # check first if v has suffix link
+        4. v is not child of root. Fast_scan(v.parent.suffixlink.child, v.r)  # check first if v has suffix link
+    """
+    if v == root:
+        return root
+
+    elif v.parent == root:
+        length = v.get_edge_length()
+        assert length > 0
+
+        if length == 1:
+            return root
+
+        else:
+            return fast_scan(x, root, v.r[0] + 1, v.r[1])
+
+    else:
+        s = v.parent.suffix_link
+        assert s != None, "No suffix link present"
+        w = s.find_child(x[v.r[0]])
+        return fast_scan(x, w, v.r[0], v.r[1])
+
+
+def mccreights_st_construction(x: str) -> SuffixTree:
+    """
+    Iterate over suffixes x[i,n]$ for i in range(1,n).
+        1. Get parent v of last leaf i-1.
+        2. Suffix_search(v) returns node w.
+        3. Set suffix link of v to w.
+        4. From w, use naive_scan to find h(i).
+        5. Make internal node, if not already
+        6. Insert t(i) as child of h(i)
+    """
+    x = x + "$"
+    root = SuffixTreeNode((0, 0))
+    leaf = insert_child(x, root, 0)
+    v = leaf.parent
+
+    for i in range(1, len(x)):
+        w = suffix_search(x, v, root)
+        v.suffix_link = w
+
+        if w == root:
+            h, k = search_path(x, w, i)
+        else:
+            h, k = search_path(x, w, leaf.r[0])
+
+        if k > 0:
+            u = split_edge(x, h, k)
+        else:
+            u = h
+
+        leaf = insert_child(x, u, i)
+        v = leaf.parent
+
+    return SuffixTree(root, x)
+
+
+tree = mccreights_st_construction("ABABB")
 print(tree)
 
 graph = tree.to_graphviz()

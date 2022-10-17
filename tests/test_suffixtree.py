@@ -90,47 +90,99 @@ def test_insert_child():
     assert v.children[x[new_leaf.r[0]]] == new_leaf
 
 
+def test_fast_scan():
+    tree = naive_st_construction("ABABB")
+    l = []
+    for val in iter(tree.root):
+        l.append(val)
+
+    # len w.r == j-i
+    w = l[0].parent
+    out = fast_scan(tree.string, tree.root, w.r[0], w.r[1])
+    assert out == w
+
+    # len w.r < j-i
+    w = l[0].parent
+    out = fast_scan(tree.string, tree.root, w.r[0] + 1, w.r[1])
+    assert out == l[2].parent
+
+    # len w.r > j-i, splits edge of input node w
+    # w = l[0].parent
+    # out = fast_scan(tree.string, w, w.r[0]+1, w.r[1])
+    # assert out.r == (0,1)
+    # assert w.r == (1,2)
+    # assert out.parent == tree.root
+    # assert w.parent == out
+    # assert out == "length_w > length_ij"
+
+
+def test_suffix_search():
+    tree = naive_st_construction("ABABB")
+    l = []
+    for val in iter(tree.root):
+        l.append(val)
+
+    # v is root
+    out = suffix_search(tree.string, tree.root, tree.root)
+    assert out == tree.root
+
+    # v is child of root & v.get_edge_length == 1
+    v = l[2].parent
+    out = suffix_search(tree.string, v, tree.root)
+    assert out == tree.root
+
+    # v is child of root & v.get_edge_length() > 1
+    v = l[0].parent
+    out = suffix_search(tree.string, v, tree.root)
+    assert out == l[2].parent
+
+    # v is not child of root, #requires suffix link
+    l[0].parent.suffix_link = tree.root
+    out = suffix_search(tree.string, l[0], tree.root)
+    assert out == l[1]
+
+
 ##################################
 # GENERAL TESTING OF SUFFIX TREE #
 ##################################
 
 
 @pytest.fixture
-def naive_tree():
-    yield naive_st_construction("ababb")
+def tree():
+    yield mccreights_st_construction("ababb")
 
 
-def test_suffix_indexes_in_tree(naive_tree):
+def test_suffix_indexes_in_tree(tree):
     """
     Compares list of expected leaf labels to leaf labels in tree.
     During this test incode assert statements also test:
     1. internal nodes have > 1 child
     2. leaf nodes have 0 children
     """
-    suffix_indexes = list(range(len(naive_tree.string)))
+    suffix_indexes = list(range(len(tree.string)))
 
     leaf_labels = []
-    for val in iter(naive_tree.root):
+    for val in iter(tree.root):
         leaf_labels.append(val.label)
     leaf_labels.sort()
 
     assert suffix_indexes == leaf_labels
 
 
-def test_suffixes_are_correct(naive_tree):
+def test_suffixes_are_correct(tree):
     """Tests if all suffixes are represented in the tree as expected, by concatenating edged from leafs to root"""
 
     l = []
-    for val in iter(naive_tree.root):
+    for val in iter(tree.root):
         node = val
         s = []
         while node.parent != None:
             i, j = node.r
-            s.append(naive_tree.string[i:j])
+            s.append(tree.string[i:j])
             node = node.parent
         s.reverse()
         suffix = "".join(s)
         l.append(suffix)
 
-    for i in range(len(naive_tree.string)):
-        assert naive_tree.string[i:] in l
+    for i in range(len(tree.string)):
+        assert tree.string[i:] in l
