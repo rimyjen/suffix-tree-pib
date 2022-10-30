@@ -48,16 +48,16 @@ def test_search_path():
 
     # no mismatches in suffix should raise exception:
     with pytest.raises(Exception) as excinfo:
-        search_path(x, root, 0)
+        search_path(x, root, 0, 0)
     assert "Reached end" in str(excinfo.value)
     # no matching children in root:
-    assert search_path(x, root, 1) == (root, 0)
-    # no matching children after reaching internal root:
-    assert search_path(x, root, 2) == (v, 0)
+    assert search_path(x, root, 1, 0) == (root, 0, 0)
+    # no matching children after reaching internal node:
+    assert search_path(x, root, 2, 0) == (v, 0, v.get_edge_length())
     # mismatch:
-    assert search_path(x, root, 4) == (v, 1)
+    assert search_path(x, root, 4, 0) == (v, 1, 1)
     # starting search from internal node:
-    assert search_path(x, v, 4) == (v, 0)
+    assert search_path(x, v, 4, v.get_edge_length()) == (v, 0, v.get_edge_length())
 
 
 def test_split_edge():
@@ -82,7 +82,7 @@ def test_insert_child():
     leaf = SuffixTreeNode((3, 6), parent=v, label=0)
     v.children[x[3]] = leaf
     root.children[x[1]] = v
-    new_leaf = insert_child(x, v, 3)
+    new_leaf = insert_child(x, v, 3, v.get_edge_length())
 
     assert new_leaf.r == (5, 6)
     assert new_leaf.parent == v
@@ -149,7 +149,7 @@ def test_suffix_search():
 
 @pytest.fixture
 def tree():
-    yield mccreights_st_construction("ababb")
+    yield naive_st_construction("GCCATGTTTAATGTCGGAAT")
 
 
 def test_suffix_indexes_in_tree(tree):
@@ -169,20 +169,54 @@ def test_suffix_indexes_in_tree(tree):
     assert suffix_indexes == leaf_labels
 
 
+def path_label(x, node):
+    s = []
+    while node.parent is not None:
+        i, j = node.r
+        s.append(x[i:j])
+        node = node.parent
+    s.reverse()
+    suffix = "".join(s)
+    return suffix
+
 def test_suffixes_are_correct(tree):
     """Tests if all suffixes are represented in the tree as expected, by concatenating edged from leafs to root"""
-
     l = []
-    for val in iter(tree.root):
-        node = val
-        s = []
-        while node.parent != None:
-            i, j = node.r
-            s.append(tree.string[i:j])
-            node = node.parent
-        s.reverse()
-        suffix = "".join(s)
-        l.append(suffix)
+    for node in iter(tree.root):
+        l.append(path_label(tree.string, node))
 
     for i in range(len(tree.string)):
         assert tree.string[i:] in l
+
+
+# MORE SUFFIX TREE TEST CASES:
+# IS  EACH SUFFIX PRESENT IN THE TREE ONLY ONCE?
+# ARE NO EDGES COMING OUT OF THE SAME NODE STARTING WITH THE SAME CHARACTER?
+# ARE ALL EDGES AT LEAST ON CHARACTER LONG?
+# ARE SUFFIX LINKS AS EXPECTED? NEED TO FIGURE OUT WHAT I EXPECT
+
+
+# testing suffix links
+# def s(x):
+#     return x[1:] if x else x
+
+# def path_label(x, v):
+#     edge_labels = []
+#     while v.parent is not None:
+#         edge_labels.append(x[v.r[0]:v.r[1]])
+#         v = v.parent
+#     return "".join(edge_labels[::-1])
+
+# for each node v:
+#     v_label = path_label(v)
+#     s_label = path_label(v.suffix_link)
+#     assert s_label == s(v_label)
+
+# node = val
+#         s = []
+#         while node.parent is not None:
+#             i, j = node.r
+#             s.append(tree.string[i:j])
+#             node = node.parent
+#         s.reverse()
+#         suffix = "".join(s)

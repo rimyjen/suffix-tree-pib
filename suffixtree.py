@@ -87,14 +87,17 @@ def search_edge(x: str, v: SuffixTreeNode, y: str, j: int) -> int:
     return length
 
 
-def search_path(x: str, v: SuffixTreeNode, j: int) -> tuple[SuffixTreeNode, int]:
+def search_path(
+    x: str, v: SuffixTreeNode, j: int, d: int
+) -> tuple[SuffixTreeNode, int]:
     """
-    Takes a node and an index. Recursively searches suffix tree.
-    Returns position of mismatch given by a node and the number of steps taken towards that node.
+    Takes a string, a node, an index and a distance to the root.
+    Recursively searches suffix tree.
+    Returns position of mismatch given by a node, the number of steps taken towards that node, and the distance to the root.
     """
     out = v.find_child(x[j])
     if out is None:
-        return v, 0
+        return v, 0, d
     length = search_edge(x, out, x, j)
     if j + length == len(x):
         # j + length is end of string we search for. In case of no sentinel.
@@ -102,13 +105,13 @@ def search_path(x: str, v: SuffixTreeNode, j: int) -> tuple[SuffixTreeNode, int]
             "Reached end of suffix with no mismatches. Make sure string contains sentinel."
         )
     if length < out.get_edge_length():
-        return out, length
-    return search_path(x, out, j + length)
+        return out, length, d + length
+    return search_path(x, out, j + length, d + length)
 
 
 def split_edge(x: str, v: SuffixTreeNode, k: int) -> SuffixTreeNode:
     """
-    Takes position of mismatch given as a node and and the number of steps taken towards that node.
+    Takes position of mismatch given as a node and the number of steps taken towards that node.
     Returns new internal node at given position.
     """
     p = v.parent
@@ -124,11 +127,14 @@ def split_edge(x: str, v: SuffixTreeNode, k: int) -> SuffixTreeNode:
     return u
 
 
-def insert_child(x: str, u: SuffixTreeNode, j: int) -> SuffixTreeNode:
-    """Takes an internal node and a suffix index. Inserts leaf node as child of internal node. Returns leaf node"""
-    k = j + u.get_edge_length()
-    leaf = SuffixTreeNode((k, len(x)), parent=u, label=j)
-    u.add_child(x[k], leaf)
+def insert_child(x: str, u: SuffixTreeNode, j: int, d: int) -> SuffixTreeNode:
+    """
+    Takes a string, an internal node, a suffix index and distance to root.
+    Inserts leaf node as child of internal node.
+    Returns leaf node
+    """
+    leaf = SuffixTreeNode((j + d, len(x)), parent=u, label=j)
+    u.add_child(x[j + d], leaf)
     return leaf
 
 
@@ -138,12 +144,12 @@ def naive_st_construction(x: str) -> SuffixTree:
     root = SuffixTreeNode((0, 0))
 
     for j in range(len(x)):
-        v, k = search_path(x, root, j)
+        v, k, d = search_path(x, root, j, 0)
         if k > 0:
             u = split_edge(x, v, k)
         else:
             u = v
-        insert_child(x, u, j)
+        insert_child(x, u, j, d)
 
     return SuffixTree(root, x)
 
@@ -201,7 +207,7 @@ def suffix_search(x: str, v: SuffixTreeNode, root: SuffixTreeNode) -> SuffixTree
 
     else:
         s = v.parent.suffix_link
-        assert s != None, "No suffix link present"
+        assert s is not None, "No suffix link present"
         w = s.find_child(x[v.r[0]])
         return fast_scan(x, w, v.r[0], v.r[1])
 
@@ -218,7 +224,7 @@ def mccreights_st_construction(x: str) -> SuffixTree:
     """
     x = x + "$"
     root = SuffixTreeNode((0, 0))
-    leaf = insert_child(x, root, 0)
+    leaf = insert_child(x, root, 0, 0)
     v = leaf.parent
 
     for i in range(1, len(x)):
@@ -230,23 +236,23 @@ def mccreights_st_construction(x: str) -> SuffixTree:
             w = v.suffix_link
 
         if w == root:
-            h, k = search_path(x, w, i)
+            h, k, d = search_path(x, w, i, 0)
         else:
-            h, k = search_path(x, w, leaf.r[0])
+            h, k, d = search_path(x, w, leaf.r[0], d-1)
 
         if k > 0:
             u = split_edge(x, h, k)
         else:
             u = h
 
-        leaf = insert_child(x, u, i)
+        leaf = insert_child(x, u, i, d)
         v = leaf.parent
 
     return SuffixTree(root, x)
 
 
-tree = mccreights_st_construction("ABABB")
+tree = mccreights_st_construction("GCCATGTTTAATGTCGGAAT")
 print(tree)
 
 graph = tree.to_graphviz()
-graph.render("graphviz/suffixtree", view=False)
+graph.render("graphviz/suffixtree_mccr", view=False)
