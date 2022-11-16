@@ -1,4 +1,5 @@
 import graphviz
+from typing import Iterator
 
 
 class SuffixTreeNode:
@@ -258,7 +259,7 @@ tree = mccreights_st_construction("mississippi")
 # print(tree.to_dot())
 
 
-def check(y):
+def find_occurrences(tree: SuffixTree, y: str) -> Iterator[int]:
     out, _, prefix_len = search_path(tree.string, tree.root, j=0, d=0, y=y)
     if prefix_len == len(y):
         yield from out
@@ -266,7 +267,7 @@ def check(y):
 
 def matches(y):
     print("searching for:", y)
-    for leaf in check(y):
+    for leaf in find_occurrences(tree, y):
         print(tree.string[leaf.label:])
     print("done")
     print()
