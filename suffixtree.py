@@ -38,7 +38,7 @@ class SuffixTreeNode:
     def get_edge_length(self) -> int:
         return self.r[1] - self.r[0]
 
-    def to_dot(self):
+    def to_dot(self, tree):
         if self.parent is None:
             yield f'{id(self)}[label = "", shape = circle, style = filled, fillcolor = grey]'
         else:
@@ -46,12 +46,12 @@ class SuffixTreeNode:
                 yield f'{id(self)}[label = "", shape = circle, style = filled, fillcolor = grey]'
             else:
                 yield f"{id(self)}[label = {self.label}, shape = circle, style = filled, fillcolor = grey]"
-            label = f'({",".join(map(str, self.r))})'
+            label = f'{tree.string[slice(*self.r)]} ({",".join(map(str, self.r))})'
             yield f'{id(self.parent)} -> {id(self)}[label = "{label}"]'
 
         for key in self.children:
             child = self.children[key]
-            yield from child.to_dot()
+            yield from child.to_dot(tree)
 
 
 class SuffixTree:
@@ -64,7 +64,7 @@ class SuffixTree:
         return f"SuffixTree({self.string})"
 
     def to_dot(self):
-        return 'digraph { rankdir="LR" ' + "\n".join(self.root.to_dot()) + "}"
+        return 'digraph { rankdir="LR" ' + "\n".join(self.root.to_dot(self)) + "}"
 
     def to_graphviz(self):
         graph = self.to_dot()
@@ -88,17 +88,18 @@ def search_edge(x: str, v: SuffixTreeNode, y: str, j: int) -> int:
 
 
 def search_path(
-    x: str, v: SuffixTreeNode, j: int, d: int
+    x: str, v: SuffixTreeNode, j: int, d: int, y: str | None = None
 ) -> tuple[SuffixTreeNode, int]:
     """
     Takes a string, a node, an index and a distance to the root.
     Recursively searches suffix tree.
     Returns position of mismatch given by a node, the number of steps taken towards that node, and the distance to the root.
     """
-    out = v.find_child(x[j])
+    y = y if y is not None else x
+    out = v.find_child(y[j])
     if out is None:
         return v, 0, d
-    length = search_edge(x, out, x, j)
+    length = search_edge(x, out, y, j)
     if j + length == len(x):
         # j + length is end of string we search for. In case of no sentinel.
         raise Exception(
@@ -106,7 +107,9 @@ def search_path(
         )
     if length < out.get_edge_length():
         return out, length, d + length
-    return search_path(x, out, j + length, d + length)
+    if j + length == len(y):
+        return out, length, d + length
+    return search_path(x, out, j + length, d + length, y)
 
 
 def split_edge(x: str, v: SuffixTreeNode, k: int) -> SuffixTreeNode:
@@ -251,8 +254,28 @@ def mccreights_st_construction(x: str) -> SuffixTree:
     return SuffixTree(root, x)
 
 
-tree = mccreights_st_construction("GCCATGTTTAATGTCGGAAT")
-print(tree)
+tree = mccreights_st_construction("mississippi")
+# print(tree.to_dot())
 
-graph = tree.to_graphviz()
-graph.render("graphviz/suffixtree_mccr", view=False)
+
+def check(y):
+    out, _, prefix_len = search_path(tree.string, tree.root, j=0, d=0, y=y)
+    if prefix_len == len(y):
+        yield from out
+
+
+def matches(y):
+    print("searching for:", y)
+    for leaf in check(y):
+        print(tree.string[leaf.label:])
+    print("done")
+    print()
+
+
+matches("ssi")
+matches("sss")
+matches("ss")
+matches("is")
+
+
+#graph.render("graphviz/suffixtree_mccr", view=False)
