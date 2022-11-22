@@ -1,5 +1,4 @@
 import graphviz
-from typing import Iterator
 
 
 class SuffixTreeNode:
@@ -16,17 +15,10 @@ class SuffixTreeNode:
     def __iter__(self):
         for key in self.children:
             child = self.children[key]
-            n_children = len(child.children)
 
             if child.label == None:
-                assert (
-                    n_children > 1
-                ), f"internal node expected to have more than 1 child, has {n_children}"
                 yield from child
             else:
-                assert (
-                    n_children == 0
-                ), f"leaf node expected to have 0 children, has {n_children}"
                 yield child
 
     def find_child(self, key: str):
@@ -242,7 +234,7 @@ def mccreights_st_construction(x: str) -> SuffixTree:
         if w == root:
             h, k, d = search_path(x, w, i, 0)
         else:
-            h, k, d = search_path(x, w, leaf.r[0], d-1)
+            h, k, d = search_path(x, w, leaf.r[0], d - 1)
 
         if k > 0:
             u = split_edge(x, h, k)
@@ -255,28 +247,6 @@ def mccreights_st_construction(x: str) -> SuffixTree:
     return SuffixTree(root, x)
 
 
-tree = mccreights_st_construction("mississippi")
-# print(tree.to_dot())
-
-
-def find_occurrences(tree: SuffixTree, y: str) -> Iterator[int]:
-    out, _, prefix_len = search_path(tree.string, tree.root, j=0, d=0, y=y)
-    if prefix_len == len(y):
-        yield from out
-
-
-def matches(y):
-    print("searching for:", y)
-    for leaf in find_occurrences(tree, y):
-        print(tree.string[leaf.label:])
-    print("done")
-    print()
-
-
-matches("ssi")
-matches("sss")
-matches("ss")
-matches("is")
-
-
-#graph.render("graphviz/suffixtree_mccr", view=False)
+tree = mccreights_st_construction("abbaba")
+graph = tree.to_graphviz()
+graph.render("graphviz/suffixtree_mccr", view=False)
