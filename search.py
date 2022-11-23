@@ -59,13 +59,16 @@ def get_subtrees_from_node(v):
 
 def find_right_maximal_repeats(v):
     subtrees = get_subtrees_from_node(v)
+    print("Repeat:", funcs.get_path_label(tree.string, v))
+    # assuming all repeats start from the root
 
     for i in range(len(subtrees) - 1):
-        # assuming all repeats start from the root
-        print("Repeat:", funcs.get_path_label(tree.string, v))
-        print_vals_from_lists(subtrees[i], subtrees[i + 1])
+        for j in range(i+1, len(subtrees)):
+            print_vals_from_lists(subtrees[i], subtrees[j])
 
 tree = mccreights_st_construction("mississippi")
+graph = tree.to_graphviz()
+graph.render("graphviz/suffixtree_mccr", view=False)
 
 for v in get_internal_nodes(tree):
     find_right_maximal_repeats(v)
