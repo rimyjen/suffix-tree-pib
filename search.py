@@ -10,13 +10,16 @@ from typing import Iterator
 def find_occurrences(tree: SuffixTree, y: str) -> Iterator[int]:
     out, _, prefix_len = search_path(tree.string, tree.root, j=0, d=0, y=y)
     if prefix_len == len(y):
-        yield from out
+        if out.label is not None:
+            yield out
+        else:
+            yield from out
 
 
 def matches(y: str):
-    print("searching for:", y)
+    print("Searching for", y, "in", tree.string[:-1])
     for leaf in find_occurrences(tree, y):
-        print(tree.string[leaf.label :])
+        print("Pattern located at index", leaf.label)
     print("done")
     print()
 
@@ -29,7 +32,7 @@ def matches(y: str):
 def print_vals_from_lists(a, b):
     for i in a:
         for j in b:
-            print(i, j)
+            print("Pair:", i, j)
 
 
 def get_internal_nodes(tree):
@@ -59,16 +62,14 @@ def get_subtrees_from_node(v):
 
 def find_right_maximal_repeats(v):
     subtrees = get_subtrees_from_node(v)
-    print("Repeat:", funcs.get_path_label(tree.string, v))
-    # assuming all repeats start from the root
+    print("Right maximal repeat:", funcs.get_path_label(tree.string, v))
 
     for i in range(len(subtrees) - 1):
-        for j in range(i+1, len(subtrees)):
+        for j in range(i + 1, len(subtrees)):
             print_vals_from_lists(subtrees[i], subtrees[j])
 
-tree = mccreights_st_construction("mississippi")
-graph = tree.to_graphviz()
-graph.render("graphviz/suffixtree_mccr", view=False)
+
+tree = mccreights_st_construction("ATCGTCAT")
 
 for v in get_internal_nodes(tree):
     find_right_maximal_repeats(v)
