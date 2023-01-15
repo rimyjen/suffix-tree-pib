@@ -1,0 +1,72 @@
+from numpy.random import choice
+from numpy import mean
+import pandas as pd
+import time
+from suffixtree import mccreights_st_construction
+from search import *
+
+alphabet = ["A", "C", "G", "T"]
+
+
+def get_random_string(alphabet, n):
+    return "".join(choice(alphabet, n))
+
+
+lengths = range(1, 100000, 5000)
+i = 1
+t_search = []
+t_search_exp = []
+t_output = []
+t_output_exp = []
+repeats = []
+
+for n in lengths:
+    ts = []
+    to = []
+
+    for _ in range(5):
+        x = get_random_string(alphabet, n)
+        tree = mccreights_st_construction(x)
+        
+        ts_sum = []
+        to_sum = []
+        z = []
+        for v in get_internal_nodes(tree):
+            start = time.perf_counter()
+            subtrees = get_subtrees_from_node(v)
+            end = time.perf_counter()
+            ts_sum.append(end - start)
+
+            start = time.perf_counter()
+            for i in range(len(subtrees) - 1):
+                for j in range(i + 1, len(subtrees)):
+                    for k in subtrees[i]:
+                        for l in subtrees[j]:
+                            z.append("x")
+            end = time.perf_counter()
+            to_sum.append(end - start)
+
+        ts.append(sum(ts_sum))
+        to.append(sum(to_sum))
+
+    t_search.append(mean(ts))
+    t_search_exp.append(mean(ts)/(n))
+
+    t_output.append(mean(to))
+    print(len(z))
+    if len(z) != 0:
+        t_output_exp.append(mean(to)/len(z))
+    else:
+        t_output_exp.append(0)
+
+    repeats.append(len(z))
+
+    print("Completed iteration", i)
+i += 1
+
+df = pd.DataFrame(
+    list(zip(lengths, repeats, t_search, t_search_exp, t_output, t_output_exp)), columns=["n", "z", "ts", "tse", "to", "toe"]
+)
+
+print(df)
+df.to_csv("plots/repeats_runtime.csv", index=False)

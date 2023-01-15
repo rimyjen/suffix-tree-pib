@@ -1,0 +1,39 @@
+from numpy.random import choice
+from numpy import mean
+import pandas as pd
+import time
+from suffixtree import mccreights_st_construction
+from search import find_occurrences
+
+alphabet = ["A", "C", "G", "T"]
+
+
+def get_random_string(alphabet, n):
+    return "".join(choice(alphabet, n))
+
+
+lengths = range(1, 100002, 5000)
+i = 1
+times = []
+
+for n in lengths:
+    t = []
+    for _ in range(20):
+        x = get_random_string(alphabet, n)
+        tree = mccreights_st_construction(x)
+        
+        start = time.perf_counter()
+        find_occurrences(tree, x[1:])
+        end = time.perf_counter()
+        t.append(end - start)
+
+    times.append(mean(t))
+    print("Completed iteration", i, ", average run time per iteration:", sum(t))
+    i += 1
+
+df = pd.DataFrame(
+    list(zip(lengths, times)), columns=["m", "exact_search"]
+)
+
+print(df)
+df.to_csv("plots/exact_search_runtime_100k.csv", index=False)
