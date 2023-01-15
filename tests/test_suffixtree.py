@@ -106,6 +106,7 @@ def test_fast_scan():
     out = fast_scan(tree.string, tree.root, w.r[0] + 1, w.r[1])
     assert out == l[2].parent
 
+
 def test_suffix_search():
     tree = naive_st_construction("ABABB")
     l = []
@@ -136,12 +137,22 @@ def test_suffix_search():
 # GENERAL TESTING OF SUFFIX TREE #
 ##################################
 
-@pytest.fixture(params=["MISSISSIPPI", "GCCATGTTTAATGTCGGAAT", "aabaabaabaabaab", "aaaaaabbbbbbcccccc"])
+
+@pytest.fixture(
+    params=[
+        "MISSISSIPPI",
+        "GCCATGTTTAATGTCGGAAT",
+        "aaaaaaaaaaaaaa",
+        "aaaaaabbbbbbcccccc",
+    ]
+)
 def tree(request):
     yield mccreights_st_construction(request.param)
 
+
 def s(x: str):
     return x[1:] if x else x
+
 
 def get_path_label(x: str, node: SuffixTreeNode) -> str:
     s = []
@@ -153,6 +164,7 @@ def get_path_label(x: str, node: SuffixTreeNode) -> str:
     s.reverse()
     suffix = "".join(s)
     return suffix
+
 
 def test_suffix_indexes_in_tree(tree):
     """
@@ -182,8 +194,9 @@ def test_suffixes_are_correct(tree):
 
     for i in range(len(tree.string)):
         assert tree.string[i:] in l
-    
+
     assert len(l) == len(set(l))
+
 
 def test_suffix_links(tree):
     """Tests if all suffix links point to the correct suffix"""

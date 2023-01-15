@@ -82,7 +82,7 @@ def search_edge(x: str, v: SuffixTreeNode, y: str, j: int) -> int:
 
 def search_path(
     x: str, v: SuffixTreeNode, j: int, d: int, y: str | None = None
-) -> tuple[SuffixTreeNode, int]:
+) -> tuple[SuffixTreeNode, int, int]:
     """
     Takes a string, a node, an index and a distance to the root.
     Recursively searches suffix tree.
@@ -138,8 +138,9 @@ def naive_st_construction(x: str) -> SuffixTree:
     """Iteratively inserts suffixes in suffix tree"""
     x = x + "$"
     root = SuffixTreeNode((0, 0))
+    insert_child(x, root, 0, 0)
 
-    for j in range(len(x)):
+    for j in range(1, len(x)):
         v, k, d = search_path(x, root, j, 0)
         if k > 0:
             u = split_edge(x, v, k)
@@ -170,7 +171,6 @@ def fast_scan(x: str, w: SuffixTreeNode, i: int, j: int) -> SuffixTreeNode:
 
     if length_w > length_ij:
         return split_edge(x, w, length_ij)
-        # return "length_w > length_ij"
     elif length_w < length_ij:
         i += length_w
         out = w.find_child(x[i])
@@ -247,6 +247,6 @@ def mccreights_st_construction(x: str) -> SuffixTree:
     return SuffixTree(root, x)
 
 
-tree = mccreights_st_construction("abbaba")
+tree = mccreights_st_construction("GCCATTAAT")
 graph = tree.to_graphviz()
 graph.render("graphviz/suffixtree_mccr", view=False)
